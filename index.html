@@ -1,0 +1,117 @@
+<html>
+  <head>
+    <meta charset="utf-8"/>
+    <title>EspritLibre WebMonth</title>
+    <link rel="stylesheet" href="semantic/packaged/css/semantic.css"/>
+    <script src="semantic/packaged/javascript/semantic.js"></script>
+    <script language="javascript" type="text/javascript">
+    var challengers = null;
+    var index = 0;
+    var xhr = new XMLHttpRequest();
+    xhr.onreadystatechange = function() {
+      if(xhr.readyState === 4){
+        if(xhr.status === 200){
+          var content = document.getElementById('content');
+          content.innerHTML = xhr.responseText;
+          // Parsing :
+          var trackProgressList = content.getElementsByClassName('track-progress');
+
+          if(trackProgressList.length == 0){
+            console.log("Nothing to parse");
+            return;
+          }
+          var nickname = challengers[index-1].innerHTML;
+          var progressListElt = document.getElementById('progress-list');
+          var message = document.createElement('div');
+          message.setAttribute('class', 'ui info, message');
+          var header = document.createElement('div');
+          header.setAttribute('class', 'header'); 
+          header.innerHTML += nickname;
+          message.appendChild(header);
+          for(var i = 0;i< trackProgressList.length; i++){
+            var track = trackProgressList[i];
+            var percentage = track.getAttribute('data-percent') * 100;
+            var title = track.getElementsByClassName('track-name')[0].getAttribute('title');
+            var ulElt = document.createElement('ul');
+            ulElt.setAttribute('class', 'list');
+            ulElt.innerHTML += '<li> <strong>'+title+'</strong> : '+ Math.round(percentage) + '%</li>';
+            console.log(title+" progression is : "+percentage); 
+            message.appendChild(ulElt);
+          }
+
+          //progressListElt.innerHTML = "";
+          progressListElt.appendChild(message);
+
+          if(index < challengers.length)
+            retrive();
+
+        }
+      }
+    }
+
+    function retrive(){
+        var nickname = challengers[index].innerHTML;
+        xhr.open("GET", "http://www.codecademy.com/"+nickname);
+        xhr.send(null);
+        index++;
+    }
+
+    function addChallenger(){
+      var nickname = document.getElementById('nickname').value;
+      console.log(nickname);
+      var lxhr = new XMLHttpRequest();
+      var url = window.location.href+"add.php";
+      lxhr.open('GET', url+"?nickname="+nickname);
+      lxhr.send(null);
+      lxhr.onreadystatechange = function(){
+        if (lxhr.readyState == 4) {
+          if(lxhr.status == 200){
+          console.log('success ! we got a new challenger !');
+          retriveChallengers();
+          }
+        }
+      }
+    }
+
+    function retriveChallengers(){
+      
+      var lxhr = new XMLHttpRequest();
+      var url = window.location.href+"get.php";
+      lxhr.open('GET', url);
+      lxhr.send(null);
+      lxhr.onreadystatechange = function(){
+        if (lxhr.readyState == 4) {
+          if(lxhr.status == 200){
+            var ghostElement = document.createElement('div');
+            ghostElement.innerHTML = lxhr.responseText;
+            console.log(ghostElement);
+            challengers = ghostElement.getElementsByClassName('challenger');
+            index = 0;
+            retrive();
+          }
+        }
+      }
+     }
+    </script>
+  </head>
+  <body>
+    <div class="ui large menu">
+      <a id="refresh" class="active item" onclick="retriveChallengers()">
+        <i class="button"></i> Refresh 
+      </a>
+      <div class="right menu">
+        <div class="item">
+          <div class="ui icon input">
+            <input id="nickname" placeholder="Nickname ..." type="text">
+              <i class="link icon"></i>
+          </div>
+        </div>
+      <div class="item">
+        <div class="ui teal button" onclick="addChallenger();">Add your name</div>
+      </div>
+    </div>
+  </div>
+  <div id="progress-list"></div>
+  <div id="content" hidden></div>
+  </body>
+</html>
